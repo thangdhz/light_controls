@@ -21,9 +21,13 @@
 #include "AutoConnectCredential.h"
 #include "webpage.h"
 #include "portal.h"
+#include "swdimmer.h"
 /******************************************************************************/
 /*                              TYPES and DEFINITIONS                         */
 /******************************************************************************/
+#define MSG_LEVEL_REPORT                           \
+    "[{\"channel\": 0, \"level\": %d},{\"channel\": 1, \"level\": %d}]"
+
 const char ROOT_PAGE[] PROGMEM =
     "<html>"
     "<head>"
@@ -76,9 +80,39 @@ void portal_swdimmerpage() {
 }
 
 void portal_swdimmer_setlevel() {
+    String strs[2];
+    int count = 0;
+    int channel = 0;
+    int level = 0;
     String command = server.pathArg(0);
-    LOG_INFO("=== %s", command.c_str());
     server.send(200, "text/plain", "OK");
+
+    while (command.length() > 0 && count < 2) {
+        int index = command.indexOf('&');
+        if (index == -1) {
+            strs[count++] = command;
+            break;
+        }
+        else {
+            strs[count++] = command.substring(0, index);
+            command = command.substring(index + 1);
+        }
+    }
+
+    strs[0].replace("channel=", "");
+    strs[1].replace("level=", "");
+
+    channel = atoi(strs[0].c_str());
+    level = atoi(strs[1].c_str());
+    LOG_INFO(">> SET channel = %d, level = %d", channel, level);
+    swdimmer_set_level(channel, level);
+}
+
+void portal_swdimmer_getlevel() {
+    char swdimmer_level[64];
+
+    sprintf(swdimmer_level, MSG_LEVEL_REPORT, swdimmer_get_level(LED_WW), swdimmer_get_level(LED_CW));
+    server.send(200, "application/json", swdimmer_level);
 }
 
 void portal_handle(void *arg) {
@@ -108,6 +142,7 @@ void portal_init() {
     server.on("/", portal_rootpage);
     server.on("/swdimmer.js", portal_swdimmerpage);
     server.on(UriBraces("/set/{}"), portal_swdimmer_setlevel);
+    server.on("/getlevel", portal_swdimmer_getlevel);
 
     LOG_INFO("Creating portal and trying to connect...");
     // Establish a connection with an autoReconnect option.

@@ -146,6 +146,13 @@ class swdimmer {
     })
   };
 
+  updateLevel(level) {
+    console.log(`>> Channel ${this.channel} update level ${level}`);
+    this.swlevel = level;
+    this.theta = degToRd(levelToDeg(this.swlevel)) - Math.PI;
+    this.swRender();
+  }
+
   getRealCoordinates(x, y) {
     let scaleX = this.element.getBoundingClientRect().width / this.element.width;
     let scaleY = this.element.getBoundingClientRect().height / this.element.height;
@@ -299,5 +306,23 @@ class swdimmer {
   };
 };
 
+swdimmerch0 = new swdimmer("swdimmerch0", 0);
 swdimmerch1 = new swdimmer("swdimmerch1", 1);
-swdimmerch2 = new swdimmer("swdimmerch2", 2);
+const arrchannel = [swdimmerch0, swdimmerch1];
+
+function swGetLevel() {
+  let xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function() {
+    if (xhttp.readyState === 4) {
+      const arrlevel = JSON.parse(xhttp.response);
+      arrchannel[arrlevel[0]["channel"]].updateLevel(arrlevel[0]["level"])
+      arrchannel[arrlevel[1]["channel"]].updateLevel(arrlevel[1]["level"])
+    }
+  }
+
+  xhttp.open("GET", `/getlevel`, true);
+  xhttp.send();
+}
+
+swGetLevel();

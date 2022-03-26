@@ -2,9 +2,11 @@
 #include "nvs.h"
 #include "log.h"
 #include "portal.h"
+#include "swdimmer.h"
 
 void setup() {
     Serial.begin(115200);
+    swdimmer_init();
     portal_init();
 }
 
