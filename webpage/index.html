@@ -9,7 +9,32 @@
     padding: 0;
     background: #292726;
   }
+  .tab {
+    overflow: hidden;
+    display: flex;
+    background: #af4e1d;
+    width: 420px;
+    height: 58px;
+    align-items: center;
+  }
+  .tab button {
+    color: #ffffff;
+    opacity: 1;
+    border-right: 1px solid #e5e4e0;
+    background-color: transparent;
+    outline: none;
+    cursor: pointer;
+    padding: 28px;
+    transition: 0.3s;
+    font-size: 13px;
+    opacity: 0.8;
+    position: relative;
+    font-weight: 600;
+    flex: 1;
+    letter-spacing: 0.5px;
+  }
   #swdimmerch0 {
+    margin-top: 32px;
     width: 400px;
     height: 280px;
     background: #292726;
@@ -20,19 +45,46 @@
     background: #292726;
     padding-top:0px;
   }
+  #sensor {
+    color: #9c9b97;
+    font-size: 16px;
+    font-weight: 600;
+  }
   </style>
   <body>
-      <h2 align="center" style="color:#e5e4e0;margin:20px;">~~~ Lamp ~~~</h2>
-      <p style="padding-top:5px;text-align:center">
-          <a href="/_ac"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAC2klEQVRIS61VvWsUQRSfmU2pon9BUIkQUaKFaCBKgooSb2d3NSSFKbQR/KrEIiIKBiGF2CgRxEpjQNHs7mwOUcghwUQ7g58IsbGxEBWsb2f8zR177s3t3S2cA8ftzPu993vzvoaSnMu2vRKlaqgKp74Q/tE8qjQPyHGcrUrRjwlWShmDbFMURd/a6TcQwNiYUmpFCPElUebcuQ2vz6aNATMVReHEPwzfSSntDcNwNo2rI+DcvQzhpAbA40VKyV0p1Q9snzBG1qYVcYufXV1sREraDcxpyHdXgkfpRBj6Uwm2RsC5dxxmZ9pdOY9cKTISRcHTCmGiUCh4fYyplTwG2mAUbtMTBMHXOgK9QfyXEZr+TkgQ1oUwDA40hEgfIAfj+HuQRaBzAs9eKyUZ5Htx+T3ZODKG8DzOJMANhmGomJVMXPll+hx9UUAlzZrJJ4QNCDG3VEfguu7mcpmcB/gkBOtShhQhchAlu5jlLUgc9ENgyP5gf9+y6LTv+58p5zySkgwzLNOIGc8sEoT1Lc53NMlbCQQuvMxeCME1NNPVVkmH/i3IzzXDtCSA0qQQwZWOCJDY50jsQRjJmkslEOxvTcDRO6zPxOh5xZglKkYLhWM9jMVnkIsTyMT6NBj7IbOCEjm6HxNVVTo2WXqEWJZ1T8rytB6GxizyDkPhWVpBqfiXUtbo/HywYJSpA9kMamNNPZ71R9Hcm+TMHHZNGw3EuraXEUldbfvw25UdOjqOt+JhMwJd7+jSTpZaEiIcaCDwPK83jtWnTkwnunFMtxeL/ge9r4XItt1RNNaj/0GAcV2bR3U5sG3nEh6M61US+Qrfd9Bs31GGulI2GOS/8dgcQZV1w+ApjIxB7TDwF9GcNzJzoA+rD0/8HvPnXQJCt2qFCwbBTfRI7UyXumWVt+HJ9NO4XI++bdsb0YyrqXmlh+AWOLHaLqS5CLQR5EggR3YlcVS9gKeH2hnX8r8Kmi1CAsl36QAAAABJRU5ErkJggg==" border="0" title="AutoConnect menu" alt="AutoConnect menu"/></a>
-      </p>
-      <div role="progressbar" aria-valuemin="0" aria-valuemax="100" style="--value:60"></div>
-      <div align="center">
-        <canvas id="swdimmerch0"></canvas>
-      </div>
-      <div align="center">
-        <canvas id="swdimmerch1"></canvas>
-      </div>
+    <div class="tab">
+      <button class="tablinks" onclick="openPage(event, 'light_controls')"><span>Light control</span></button>
+      <button class="tablinks" onclick="openPage(event, 'schedule_setings')"><span>Schedule </span></button>
+      <button class="tablinks" onclick="location.href='/_ac'"><span>Network</span> </button>
+    </div>
+    <div id="light_controls">
+      <div align="center"> <canvas id="swdimmerch0"></canvas> 
+      <div align="center"> <canvas id="swdimmerch1"></canvas> 
+      <div align="center"> <p id="sensor"></p> </div>
+    </div>
+
+    <div id="schedule_setings">
+      <h3>London</h3>
+      <p>London is the capital city of England.</p>
+    </div>
   </body>
+  <script> 
+  function openPage(evt, cityName) {
+  var i, tabcontent, tablinks;
+
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  document.getElementById(cityName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+  </script>
   <script src="swdimmer.js"></script>
 </html>

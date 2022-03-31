@@ -4,8 +4,9 @@
 #include "utils.h"
 #include "swdimmer.h"
 
+#define RATIO                                      0.8f
 #define LED_PWM_FREQ                               5000
-#define LED_PWM_RESOLUTION                         8
+#define LED_PWM_RESOLUTION                         13
 
 int swdimmer_level[LED_MAX_CHANNEL];
 
@@ -14,8 +15,8 @@ void swdimmer_init() {
     record_get(swdimmer_level);
 
     // configure LED PWM functionalitites
-    ledcSetup(LED_WW_PINOUT, LED_PWM_FREQ, LED_PWM_RESOLUTION);
-    ledcSetup(LED_CW_PINOUT, LED_PWM_FREQ, LED_PWM_RESOLUTION);
+    ledcSetup(LED_WW, LED_PWM_FREQ, LED_PWM_RESOLUTION);
+    ledcSetup(LED_CW, LED_PWM_FREQ, LED_PWM_RESOLUTION);
   
     // attach the channel to the GPIO to be controlled
     ledcAttachPin(LED_WW_PINOUT, LED_WW);
@@ -23,21 +24,36 @@ void swdimmer_init() {
 }
 
 void swdimmer_set_level(int channel, int level) {
-    int pwmlevel;
-
     if (channel >= LED_MAX_CHANNEL) {
         return;
     }
 
     swdimmer_level[channel] = level;
-    pwmlevel =  (int)(level * 2.55);
-    if (pwmlevel > 255) {
-        pwmlevel = 255;
+}
+
+void swdimmer_update() {
+    static int swlevel[LED_MAX_CHANNEL];
+    int pwmlevel;
+    bool is_change = false;
+
+    for (int i = 0; i < LED_MAX_CHANNEL; i++) {
+        if (swlevel[i] != swdimmer_level[i]) {
+            swlevel[i] = swdimmer_level[i];
+
+            pwmlevel = (int)(swlevel[i] * 2.55f * RATIO);
+            if (pwmlevel > 255) {
+                pwmlevel = 255;
+            }
+
+            ledcWrite(i, pwmlevel * 8191 / 255);
+            LOG_INFO("> OUT channel = %d, level = %d", i, swlevel[i]);
+            is_change = true;
+        }
     }
 
-    record_set(swdimmer_level);
-
-    // ledcWrite(channel, pwmlevel);
+    if (is_change) {
+        record_set(swdimmer_level);
+    }
 }
 
 int swdimmer_get_level(int channel) {

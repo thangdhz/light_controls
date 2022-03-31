@@ -18,8 +18,15 @@ extern "C" {
 #define SOFT_AP_IP_ADDR                            "10.10.0.1"     /**< Default SoftAP ip addr */
 #define SOFT_AP_GATEWAY_IP_ADDR                    "10.10.0.1"     /**< Default SoftAP gateway ip addr */
 
-#define LED_WW_PINOUT                              16
-#define LED_CW_PINOUT                              17
+#define LED_WW_PINOUT                              0
+#define LED_CW_PINOUT                              2
+
+#define LED_WW_CTRL_PINOUT                         15
+#define LED_CW_CTRL_PINOUT                         13
+#define LED_EN_CTRL_PINOUT                         4
+
+#define SHTC3_SCL                                  23
+#define SHTC3_SDA                                  22
 
 #ifdef __cplusplus
 }

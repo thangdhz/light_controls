@@ -13,4 +13,6 @@ void swdimmer_set_level(int channel, int level);
 
 int swdimmer_get_level(int channel);
 
+void swdimmer_update();
+
 #endif /* __SW_DIMMER_H */

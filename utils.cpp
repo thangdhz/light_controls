@@ -34,7 +34,8 @@ void ls_l() {
 
 void record_init() {
     char line[32];
-    
+    int numb_lines = 0;
+
     memset(line, 0, sizeof(line));
     if (!SPIFFS.begin(true)) {
         LOG_ERR("An Error has occurred while mounting SPIFFS");
@@ -50,6 +51,7 @@ void record_init() {
     while (file.available()) {
         memset(line, 0, sizeof(line));
         file.readBytesUntil('\n', line, sizeof(line));
+        numb_lines++;
     }
 
     file.close();
@@ -72,6 +74,15 @@ void record_init() {
     }
 
     LOG_INFO(">>> swdimmer level %s >>> %d %d", line, recordch[0], recordch[1]);
+    if (numb_lines < 1024) {
+        return;
+    }
+    
+    if (!SPIFFS.remove(record_file)) {
+        LOG_ERR("Failed to delete all record");
+    }
+
+    record_set(recordch);
 }
 
 void record_get(int *ch) {

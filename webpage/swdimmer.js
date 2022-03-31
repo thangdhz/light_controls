@@ -325,4 +325,20 @@ function swGetLevel() {
   xhttp.send();
 }
 
+function sensorGet() {
+  let xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function() {
+    if (xhttp.readyState === 4) {
+      const sensorlevel = JSON.parse(xhttp.response);
+      document.getElementById("sensor").innerHTML = `Temperature ${sensorlevel["temperature"]} oC, Humidity ${sensorlevel["humidity"]} %`
+    }
+  }
+
+  xhttp.open("GET", `/getsensor`, true);
+  xhttp.send();
+}
+
 swGetLevel();
+sensorGet();
+setInterval(sensorGet, 2000);

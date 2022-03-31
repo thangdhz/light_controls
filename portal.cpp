@@ -28,6 +28,9 @@
 #define MSG_LEVEL_REPORT                           \
     "[{\"channel\": 0, \"level\": %d},{\"channel\": 1, \"level\": %d}]"
 
+#define MSG_SENSOR_LEVEL_REPORT                    \
+    "{\"temperature\":\"%.1f\", \"humidity\":\"%.1f\"}"
+
 const char ROOT_PAGE[] PROGMEM =
     "<html>"
     "<head>"
@@ -50,7 +53,8 @@ static TaskHandle_t portal_task;
 /******************************************************************************/
 /*                              EXPORTED DATA                                 */
 /******************************************************************************/
-
+extern float degc;
+extern float rh;
 /******************************************************************************/
 /*                                FUNCTIONS                                   */
 /******************************************************************************/
@@ -115,6 +119,13 @@ void portal_swdimmer_getlevel() {
     server.send(200, "application/json", swdimmer_level);
 }
 
+void portal_sensor_get() {
+    char sensor_level[64];
+
+    sprintf(sensor_level, MSG_SENSOR_LEVEL_REPORT, degc, rh);
+    server.send(200, "application/json", sensor_level);
+}
+
 void portal_handle(void *arg) {
     while (1) {
         portal.handleClient();
@@ -143,6 +154,7 @@ void portal_init() {
     server.on("/swdimmer.js", portal_swdimmerpage);
     server.on(UriBraces("/set/{}"), portal_swdimmer_setlevel);
     server.on("/getlevel", portal_swdimmer_getlevel);
+    server.on("/getsensor", portal_sensor_get);
 
     LOG_INFO("Creating portal and trying to connect...");
     // Establish a connection with an autoReconnect option.
