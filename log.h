@@ -2,6 +2,9 @@
 #define __LOG_H
 
 #include <stdio.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 #ifdef __cplusplus
@@ -14,29 +17,22 @@ extern "C" {
 #define LLOG_LEVEL_INFO                            3 /*< Basic info */
 #define LLOG_LEVEL_DBG                             4 /*< Detailled debug */
 
-#define LOG_WITH_LOC                               1
-#define LOG_OUTPUT(...)                            printf(__VA_ARGS__)
+#define LOG_LINE_MAX                               384
 #define __FILE_NAME__                              (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 
-#define LOG(newline, level, levelstr, ...)                         \
-    do {                                                           \
-        if (level <= (LOG_LEVEL)) {                                \
-            if (newline) {                                         \
-                char loc_str[64];                                  \
-                snprintf(loc_str, sizeof(loc_str), "%s:%d", __FILE_NAME__, __LINE__); \
-                LOG_OUTPUT("[%s][%s] ", levelstr, loc_str);        \
-            }                                                      \
-            LOG_OUTPUT(__VA_ARGS__);                               \
-            LOG_OUTPUT("\r\n");                                    \
-        }                                                          \
-    } while (0)
+#define LOG(newline, level, levelstr, format, ...) llog(newline, level, levelstr, __FILE_NAME__, __LINE__, format, __VA_ARGS__)
 
-#define LOG_PRINT(...)                             LOG(1, 0, "P", __VA_ARGS__)
-#define LOG_ERR(...)                               LOG(1, LLOG_LEVEL_ERR, "E", __VA_ARGS__)
-#define LOG_WARN(...)                              LOG(1, LLOG_LEVEL_WARN, "W", __VA_ARGS__)
-#define LOG_INFO(...)                              LOG(1, LLOG_LEVEL_INFO, "I", __VA_ARGS__)
-#define LOG_DBG(...)                               LOG(1, LLOG_LEVEL_DBG, "D", __VA_ARGS__)
+#define LOG_PRINT(format, ...)                     LOG(1, 0,               'P', format, __VA_ARGS__)
+#define LOG_ERR(format, ...)                       LOG(1, LLOG_LEVEL_ERR,  'E', format, __VA_ARGS__)
+#define LOG_WARN(format, ...)                      LOG(1, LLOG_LEVEL_WARN, 'W', format, __VA_ARGS__)
+#define LOG_INFO(format, ...)                      LOG(1, LLOG_LEVEL_INFO, 'I', format, __VA_ARGS__)
+#define LOG_DBG(format, ...)                       LOG(1, LLOG_LEVEL_DBG,  'D', format, __VA_ARGS__)
 
+extern void *llog_queue;
+
+void llog_init();
+
+void llog(uint8_t newline, uint8_t level, char levelstr, const char *file, uint32_t line, const char *format, ...);
 
 #ifdef __cplusplus
 }

@@ -2,7 +2,8 @@
 
 list_convert = [
     { "file_path": "index.html", "arr_name": "PAGE_INDEX" },
-    { "file_path": "swdimmer.js", "arr_name": "PAGE_SWDIMMER" },
+    { "file_path": "script.js", "arr_name": "PAGE_SCRIPT" },
+    { "file_path": "logs.html", "arr_name": "PAGE_LOGS" },
 ]
 
 def file_to_arr_byte(file_path):

@@ -13,7 +13,6 @@
     overflow: hidden;
     display: flex;
     background: #af4e1d;
-    width: 420px;
     height: 58px;
     align-items: center;
   }
@@ -33,6 +32,12 @@
     flex: 1;
     letter-spacing: 0.5px;
   }
+  .tab button.active {
+    background-color: #ec5a11;
+  }
+  .tabcontent {
+    display: none;
+  }
   #swdimmerch0 {
     margin-top: 32px;
     width: 400px;
@@ -50,41 +55,47 @@
     font-size: 16px;
     font-weight: 600;
   }
+  #timepicker {
+    margin-top: 10px;
+    width: 380px;
+    height: 380px;
+    background: #292726;
+  }
   </style>
   <body>
-    <div class="tab">
-      <button class="tablinks" onclick="openPage(event, 'light_controls')"><span>Light control</span></button>
-      <button class="tablinks" onclick="openPage(event, 'schedule_setings')"><span>Schedule </span></button>
+    <div align="center" class="tab">
+      <button class="tablinks" id="defaultOpen" onclick="openPage(event, 'light_controls')"><span>Light control</span></button>
+      <button class="tablinks" onclick="openPage(event, 'schedule_setings')"><span>Schedule</span></button>
       <button class="tablinks" onclick="location.href='/_ac'"><span>Network</span> </button>
     </div>
-    <div id="light_controls">
-      <div align="center"> <canvas id="swdimmerch0"></canvas> 
-      <div align="center"> <canvas id="swdimmerch1"></canvas> 
-      <div align="center"> <p id="sensor"></p> </div>
+    <div id="light_controls" class="tabcontent">
+      <div align="center"> <canvas id="swdimmerch0"></canvas></div>
+      <div align="center"> <canvas id="swdimmerch1"></canvas></div>
+      <div align="center"> <p id="sensor"></p></div>
     </div>
-
-    <div id="schedule_setings">
-      <h3>London</h3>
-      <p>London is the capital city of England.</p>
+    <div id="schedule_setings" class="tabcontent">
+      <div align="center"> <canvas id="timepicker"></canvas></div>
     </div>
   </body>
   <script> 
-  function openPage(evt, cityName) {
-  var i, tabcontent, tablinks;
+    function openPage(evt, page) {
+      let i, tabcontent, tablinks;
 
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
 
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
 
-  document.getElementById(cityName).style.display = "block";
-  evt.currentTarget.className += " active";
-}
+      document.getElementById(page).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+
+    document.getElementById("defaultOpen").click();
   </script>
-  <script src="swdimmer.js"></script>
+  <script src="script.js"></script>
 </html>

@@ -5,14 +5,16 @@
 #include "swdimmer.h"
 
 #define RATIO                                      0.8f
-#define LED_PWM_FREQ                               5000
-#define LED_PWM_RESOLUTION                         13
+#define LED_PWM_FREQ                               10000
+#define LED_PWM_RESOLUTION                         12
+#define LED_PWM_MAX_LEVEL                          100
 
 int swdimmer_level[LED_MAX_CHANNEL];
 
 void swdimmer_init() {
     record_init();
     record_get(swdimmer_level);
+    LOG_INFO("> OUT channel 0 = %d, channel 1 = %d", swdimmer_level[0], swdimmer_level[1]);
 
     // configure LED PWM functionalitites
     ledcSetup(LED_WW, LED_PWM_FREQ, LED_PWM_RESOLUTION);
@@ -21,11 +23,17 @@ void swdimmer_init() {
     // attach the channel to the GPIO to be controlled
     ledcAttachPin(LED_WW_PINOUT, LED_WW);
     ledcAttachPin(LED_CW_PINOUT, LED_CW);
+
+    swdimmer_update();
 }
 
 void swdimmer_set_level(int channel, int level) {
     if (channel >= LED_MAX_CHANNEL) {
         return;
+    }
+
+    if (level > LED_PWM_MAX_LEVEL) {
+        level = LED_PWM_MAX_LEVEL;
     }
 
     swdimmer_level[channel] = level;

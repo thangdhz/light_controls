@@ -22,6 +22,8 @@
 #include "webpage.h"
 #include "portal.h"
 #include "swdimmer.h"
+#include "xqueue.h"
+
 /******************************************************************************/
 /*                              TYPES and DEFINITIONS                         */
 /******************************************************************************/
@@ -60,11 +62,11 @@ extern float rh;
 /******************************************************************************/
 
 void ota_start() {
-    LOG_INFO("OTA Start updating");
+    LOG_INFO("%s", "OTA Start updating");
 }
 
 void ota_end() {
-    LOG_INFO("OTA End");
+    LOG_INFO("%s", "OTA End");
 }
 
 void ota_progress(unsigned int amount, unsigned int size) {
@@ -72,7 +74,7 @@ void ota_progress(unsigned int amount, unsigned int size) {
 }
 
 void ota_error(uint8_t error) {
-    LOG_INFO("OTA Error[%u]: ", error);
+    LOG_INFO("%s", "OTA Error[%u]: ", error);
 }
 
 void portal_rootpage() {
@@ -80,7 +82,7 @@ void portal_rootpage() {
 }
 
 void portal_swdimmerpage() {
-    server.send(200, "text/plain", PAGE_SWDIMMER);
+    server.send(200, "text/plain", PAGE_SCRIPT);
 }
 
 void portal_swdimmer_setlevel() {
@@ -126,6 +128,28 @@ void portal_sensor_get() {
     server.send(200, "application/json", sensor_level);
 }
 
+void logs_page() {
+    server.send(200, "text/html", PAGE_LOGS);
+}
+
+void get_logs() {
+    esp_err_t err;
+    char log_line[LOG_LINE_MAX];
+    size_t log_length;
+    String logs = ""; 
+    
+    while (1) {
+        memset(log_line, 0, sizeof(log_line));
+        err = xqueue_get(llog_queue, (uint8_t *)log_line, sizeof(log_line), &log_length);
+        if (err != ESP_OK) {
+            break;
+        }
+        logs += String(log_line) + "\n";
+    }
+
+    server.send(200, "text/plain", logs);
+}
+
 void portal_handle(void *arg) {
     while (1) {
         portal.handleClient();
@@ -151,12 +175,14 @@ void portal_init() {
     portal.onOTAProgress(ota_progress);
     portal.onOTAError(ota_error);
     server.on("/", portal_rootpage);
-    server.on("/swdimmer.js", portal_swdimmerpage);
+    server.on("/script.js", portal_swdimmerpage);
     server.on(UriBraces("/set/{}"), portal_swdimmer_setlevel);
     server.on("/getlevel", portal_swdimmer_getlevel);
     server.on("/getsensor", portal_sensor_get);
+    server.on("/logs", logs_page);
+    server.on("/getlogs", get_logs);
 
-    LOG_INFO("Creating portal and trying to connect...");
+    LOG_INFO("%s", "Creating portal and trying to connect...");
     // Establish a connection with an autoReconnect option.
     if (portal.begin()) {
         LOG_INFO("WiFi connected: %s", WiFi.localIP().toString().c_str());

@@ -13,7 +13,7 @@ static int recordch[RECORD_CH_SIZE];
 
 void ls_l() {
     if (!SPIFFS.begin(true)) {
-        LOG_ERR("An Error has occurred while mounting SPIFFS");
+        LOG_ERR("%s", "An Error has occurred while mounting SPIFFS");
         return;
     }
   
@@ -27,7 +27,7 @@ void ls_l() {
     }
 
     if (!count) {
-        LOG_INFO("Spiffs no file found!!");
+        LOG_INFO("%s", "Spiffs no file found!!");
     }
 }
 
@@ -37,14 +37,15 @@ void record_init() {
     int numb_lines = 0;
 
     memset(line, 0, sizeof(line));
+    ls_l();
     if (!SPIFFS.begin(true)) {
-        LOG_ERR("An Error has occurred while mounting SPIFFS");
+        LOG_ERR("%s", "An Error has occurred while mounting SPIFFS");
         return;
     }
 
     File file = SPIFFS.open(record_file);
     if (!file) {
-        LOG_ERR("Failed to open record file for reading");
+        LOG_ERR("%s", "Failed to open record file for reading");
         return;
     }
 
@@ -79,7 +80,7 @@ void record_init() {
     }
     
     if (!SPIFFS.remove(record_file)) {
-        LOG_ERR("Failed to delete all record");
+        LOG_ERR("%s", "Failed to delete all record");
     }
 
     record_set(recordch);
@@ -101,7 +102,7 @@ void record_set(int *ch) {
 
     sprintf(line, "%d %d\n", ch[0], ch[1]);
     if (!file.print(line)){
-        LOG_ERR("Failed to append record");
+        LOG_ERR("%s", "Failed to append record");
     }
 
     file.close();

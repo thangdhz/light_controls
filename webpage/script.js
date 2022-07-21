@@ -1,5 +1,13 @@
 const degToRd = (degrees) => degrees * (Math.PI / 180);
 const rdToDeg = (radian) => (radian * 180 / Math.PI + 180);
+var swLevels = [0, 0, 0];
+var dvLevels = [0, 0, 0];
+var icnt = 0;
+
+function zeroPad(nr, base) {
+  var  len = (String(base).length - String(nr).length) + 1;
+  return len > 0? new Array(len).join('0') + nr : nr;
+}
 
 function distance(x1, y1, x2, y2) {
   let xDistance = x2 - x1;
@@ -29,11 +37,7 @@ function getCoordinates(e) {
 }
 
 function swSetLevel(channel, level) {
-  let xhttp = new XMLHttpRequest();
-
-  xhttp.open("GET", `/set/channel=${channel}&level=${level}`, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.send();
+  swLevels[channel] = level;
 }
 
 function degToLevel(deg) {
@@ -306,8 +310,257 @@ class swdimmer {
   };
 };
 
+class timepicker {
+  constructor(name) {
+    this.name = name;
+    this.element = document.getElementById(this.name);
+    this.ctx = this.element.getContext("2d");
+    this.element.width = 1000;
+    this.element.height = 1000;
+    this.list_btn_day = {"x": 60, "y": 800, "R": 46 };
+    this.enb_day = [0, 0, 0, 0, 0, 0, 0];
+    this.enb_slider = false;
+    this.slider = { "x": 130, "y": 660, "w": 850, "h": 20};
+    this.sx = this.slider["x"];
+    this.sy = this.slider["y"] + 10;
+    this.swlevel = 0;
+    this.hour = 0;
+    this.min = 0;
+    this.pickxy = [0, 0];
+    this.pickstart = 0;
+
+    this.gradientSlider = this.ctx.createLinearGradient(250, 0, 0, 500);
+    this.gradientSlider.addColorStop(0, '#f3c852');
+    this.gradientSlider.addColorStop(1, '#f5e1a5');
+
+    this.gradientBackgroundSlider = this.ctx.createLinearGradient(250, 0, 0, 500);
+    this.gradientBackgroundSlider.addColorStop(1, '#3E3D31');
+    window.addEventListener('load', _ => {
+      let render = this.tmRender.bind(this);
+      window.requestAnimationFrame(render);
+    })
+
+    document.addEventListener('mousedown', e => {
+      let [x, y] = getCoordinates(e);
+      let [realX, realY] = this.getRealCoordinates(this.sx, this.sy);
+      let d = distance(x, y, realX, realY);
+      if (d < 26) {
+        this.enb_slider = true;
+      }
+      this.pickxy = [x, y];
+      this.pickstart = Date.now();
+    })
+
+    document.addEventListener('mouseup', e => {
+      let [x, y] = getCoordinates(e);
+      let [realXhh, realYhh] = this.getRealCoordinates(130, 100);
+      let [realXmm, realYmm] = this.getRealCoordinates(330, 356 + 120);
+      let scaleX = this.element.getBoundingClientRect().width / this.element.width;
+      this.enb_slider = false;
+      let picktime = Math.round(800 / (Date.now() - this.pickstart));
+      if (this.pickstart[1] > realYmm || this.pickstart[1] < realYhh) {
+        return;
+      }
+      if (y < this.pickstart[1]) {
+        if (realXhh < x && x < realXhh + 180 * scaleX) {
+          this.hour += picktime;
+        }
+        else if (realXmm < x && x < realXmm + 180 * scaleX) {
+          this.min += picktime;
+        }
+      }
+      else {
+        if (realXhh < x && x < realXhh + 180 * scaleX) {
+          this.hour -= picktime;
+        }
+        else if (realXmm < x && x < realXmm + 180 * scaleX) {
+          this.min -= picktime;
+        }
+      } 
+      if (this.hour > 23) { this.hour = 0; }
+      if (this.hour < 0) { this.hour = 23; }
+      if (this.min > 59) { this.min = 0; }
+      if (this.min < 0 ) { this.min = 59; }
+    })
+
+    document.addEventListener('mousemove', e => {
+      let [x, y] = getCoordinates(e);
+      let [realX, realY] = this.getRealCoordinates(this.slider["x"], this.slider["y"]);
+      let scaleX = this.element.getBoundingClientRect().width / this.element.width;
+      if (this.enb_slider) {
+        if (realY - 26 < y && y < realY + 26) {
+          if (this.slider["x"] < x  && x < this.slider["x"] + this.slider["w"]) {
+            this.sx = x;
+            this.swlevel = Math.round((this.sx - this.slider["x"])/ this.slider["w"] * 100);
+          }
+        }
+      }
+    })
+    
+    document.addEventListener('touchstart', e => {
+      let [x, y] = getCoordinates(e);
+      let [realX, realY] = this.getRealCoordinates(this.sx, this.sy);
+      let d = distance(x, y, realX, realY);
+      if (d < 32) {
+        this.enb_slider = true;
+      }
+    })
+    
+    document.addEventListener('touchend', e => {
+      this.enb_slider = false;
+    })
+    
+    document.addEventListener('touchmove', e => {
+      let [x, y] = getCoordinates(e);
+      e.preventDefault();
+    })
+    
+    document.addEventListener('click', e => {
+      let [x, y] = getCoordinates(e);
+      let bx = this.list_btn_day["x"];
+      let by = this.list_btn_day["y"];
+      let br = this.list_btn_day["R"];
+      for (let i = 0; i < 7; i++) {
+        let [realX, realY] = this.getRealCoordinates(bx, by);
+        let d = distance(x, y, realX, realY);
+        if (d <= br) {
+          this.enb_day[i] = !this.enb_day[i];
+        }
+        bx += 148;
+      }
+    })
+  };
+
+  updateLevel(level) {
+    console.log(`>> Channel ${this.channel} update level ${level}`);
+    this.swlevel = level;
+    this.theta = degToRd(levelToDeg(this.swlevel)) - Math.PI;
+    this.swRender();
+  }
+
+  getRealCoordinates(x, y) {
+    let scaleX = this.element.getBoundingClientRect().width / this.element.width;
+    let scaleY = this.element.getBoundingClientRect().height / this.element.height;
+    let offsetX = this.element.offsetLeft;
+    let offsetY = this.element.offsetTop;
+    let realX = x * scaleX + offsetX;
+    let realY = y * scaleY + offsetY;
+    return [realX, realY]
+  }
+
+  tmRender() {
+    this.ctx.clearRect(0, 0, this.element.width, this.element.height);
+    this.ctx.fillStyle = '#444444';
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.gradientBackgroundSlider;
+    this.ctx.fillRect(this.slider["x"], this.slider["y"], this.slider["w"], this.slider["h"]);
+    this.ctx.fill();
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.gradientSlider;
+    this.ctx.fillRect(this.slider["x"], this.slider["y"], this.sx - this.slider["x"], this.slider["h"]);
+    this.ctx.fill();
+
+    this.ctx.beginPath();
+    this.ctx.arc(this.sx, this.sy, 26, 0, 2 * Math.PI);
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fill();
+
+    this.ctx.font = "33px Arial";
+    this.ctx.fillStyle = "#ffffff";
+    this.ctx.textAlign = "center";
+    this.ctx.fillText(`${this.swlevel}%`, 60, 680);
+
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.fillStyle = '#444444';
+    this.ctx.fillRect(110, 80, 800, 420);
+    this.ctx.fill();
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeStyle = '#afa27b';
+    this.ctx.stroke();
+    this.ctx.restore();
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.gradientBackgroundSlider;
+    this.ctx.fillRect(130, 100, 180, 120);
+    this.ctx.fillRect(130, 356, 180, 120);
+    this.ctx.fillRect(330, 100, 180, 120);
+    this.ctx.fillRect(330, 356, 180, 120);
+    this.ctx.fill();
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = "#764382";
+    this.ctx.fillRect(130, 228, 180, 120);
+    this.ctx.fillRect(330, 228, 180, 120);
+    this.ctx.fill();
+
+    let h1 = this.hour == 0 ? 23 : this.hour - 1;
+    let h2 = this.hour;
+    let h3 = this.hour == 23 ? 0 : this.hour + 1;
+    let m1 = this.min == 0 ? 59 : this.min - 1;
+    let m2 = this.min;
+    let m3 = this.min == 59 ? 0 : this.min + 1;
+    this.ctx.font = "98px Roboto";
+    this.ctx.textAlign = "center";
+    this.ctx.fillStyle = "#9c9b97";
+    this.ctx.fillText(`${zeroPad(h1, 10)}`, 218, 192);
+    this.ctx.fillText(`${zeroPad(h3, 10)}`, 218, 442);
+    this.ctx.fillText(`${zeroPad(m1, 10)}`, 418, 192);
+    this.ctx.fillText(`${zeroPad(m3, 10)}`, 418, 442);
+    this.ctx.fillStyle = "#ffffff";
+    this.ctx.fillText(`${zeroPad(h2, 10)}`, 218, 318);
+    this.ctx.fillText(`${zeroPad(m2, 10)}`, 418, 318);
+    this.ctx.fillText(":", 319, 312);
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = "#afa27b";
+    this.ctx.fillRect(590 - 4, 104 - 4, 300 + 8, 160 + 8);
+    this.ctx.fillRect(590 - 4, 310 - 4, 300 + 8, 160 + 8);
+    this.ctx.fillStyle = "#3E3D31";
+    this.ctx.fillRect(590, 104, 300, 160);
+    this.ctx.fillRect(590, 310, 300, 160);
+    this.ctx.fill();
+    this.ctx.font = "68px Roboto";
+    this.ctx.textAlign = "center";
+    this.ctx.fillStyle = "#9c9b97";
+    this.ctx.fillText("Save", 740, 202);
+    this.ctx.fillText("Delete", 740, 420);
+
+
+    let bx = this.list_btn_day["x"];
+    let by = this.list_btn_day["y"];
+    let dd = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    for (let i = 0; i < 7; i++) {
+      this.ctx.beginPath();
+      this.ctx.arc(bx, by, this.list_btn_day["R"], 0, 2 * Math.PI);
+      if (this.enb_day[i]) {
+        this.ctx.fillStyle = "#27B63F"
+      }
+      else {
+        this.ctx.fillStyle = "#3E3D31";
+      }
+      this.ctx.fill();
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeStyle = '#afa27b';
+      this.ctx.stroke();
+
+      this.ctx.font = "33px Arial";
+      this.ctx.fillStyle = "#ffffff";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText(dd[i], bx, by + 10);
+      bx += 148;
+    }
+    
+    let render = this.tmRender.bind(this);
+    window.requestAnimationFrame(render);
+  }
+}
+
 swdimmerch0 = new swdimmer("swdimmerch0", 0);
 swdimmerch1 = new swdimmer("swdimmerch1", 1);
+timepicker0 = new timepicker("timepicker")
 const arrchannel = [swdimmerch0, swdimmerch1];
 
 function swGetLevel() {
@@ -323,6 +576,18 @@ function swGetLevel() {
 
   xhttp.open("GET", `/getlevel`, true);
   xhttp.send();
+}
+
+function swULLevel() {
+  icnt++;
+  let idx = icnt % 2;
+  if (dvLevels[idx] != swLevels[idx]) {
+    dvLevels[idx] = swLevels[idx];
+    let xhttp = new XMLHttpRequest();
+    xhttp.open("GET", `/set/channel=${idx}&level=${dvLevels[idx]}`, true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.send();
+  }
 }
 
 function sensorGet() {
@@ -342,3 +607,4 @@ function sensorGet() {
 swGetLevel();
 sensorGet();
 setInterval(sensorGet, 2000);
+setInterval(swULLevel, 250);

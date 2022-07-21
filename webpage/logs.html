@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+
+<html>
+  <head>
+  </head>
+
+  <style>
+    * {
+      font-family: 'Segoe UI';
+      margin: 10 10 8px;
+      padding: 0;
+      list-style: none;
+    }
+    #message-log {
+      height: 100vh;
+      width: 100vw;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+  </style>
+  <body>
+    <div id="message-log"></div>
+  </body>
+
+  <script>
+    function getLogs() {
+      let xhttp = new XMLHttpRequest();
+
+      xhttp.onreadystatechange = function() {
+         if (xhttp.readyState === 4) {
+            let logs = xhttp.response;
+            let tzoffset = (new Date()).getTimezoneOffset() * 60000;
+            let current = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -1);
+            if (logs.length > 0) {
+                log_lines = logs.split("\n");
+                for (let i = 0; i < log_lines.length; i++) {
+                  if (log_lines[i] == "\n" || log_lines[i] == "") {
+                    continue;
+                  }
+                  document.getElementById('message-log').innerHTML += "<p>" + current + " -> " + log_lines[i] + "<\p>"
+                }
+                
+                let elem = document.getElementById('message-log');
+                elem.scrollTop = elem.scrollHeight;
+            }
+         }
+      }
+
+      xhttp.open("GET", `/getlogs`, true);
+      xhttp.send();
+    }
+
+    setInterval(getLogs, 50);
+  </script> 
+</html>

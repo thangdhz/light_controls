@@ -21,8 +21,8 @@ extern "C" {
 #define LED_WW_PINOUT                              0
 #define LED_CW_PINOUT                              2
 
-#define LED_WW_CTRL_PINOUT                         15
-#define LED_CW_CTRL_PINOUT                         13
+#define LED_WW_CTRL_PINOUT                         34
+#define LED_CW_CTRL_PINOUT                         35
 #define LED_EN_CTRL_PINOUT                         4
 
 #define SHTC3_SCL                                  23
