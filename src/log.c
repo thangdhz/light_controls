@@ -4,7 +4,7 @@
 
 #define LOG_OUTPUT(...)                            printf(__VA_ARGS__)
 #define MAX_LOG_QUEUE_SIZE                         8
-
+#define LOC_SIZE                                   22
 void *llog_queue = NULL;
 
 void llog_init()
@@ -19,8 +19,15 @@ void llog(uint8_t newline, uint8_t level, char levelstr, const char *file, uint3
     va_list args;
 
     if (level <= (LOG_LEVEL)) {                                
-        if (newline) {                                                                         
-            index = snprintf(log_line, sizeof(log_line), "[%c] [%s:%d] ", levelstr, file, line);        
+        if (newline) {
+            char loc_str[LOC_SIZE];                            
+            int loc_sz;                                        
+            loc_sz = snprintf(loc_str, sizeof(loc_str), "%s:%d", file, line); 
+            for (int i = loc_sz; i < LOC_SIZE - 1; i++) {      
+                loc_str[i] = ' ';                             
+            }                                                  
+            loc_str[LOC_SIZE - 1] = '\0';                                              
+            index = snprintf(log_line, sizeof(log_line), "[%c] [%s] ", levelstr, loc_str);        
         }                                                                                                                        
     } 
 

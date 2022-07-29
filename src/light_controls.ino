@@ -58,6 +58,10 @@ void handle_ictrl() {
 
 void setup() {
     Serial.begin(115200);
+    LOG_PRINT("%s", "\r\n\r\n");
+    LOG_INFO("%s", "======================================================================");
+    LOG_INFO("%s", "Light Controls");
+    LOG_INFO("%s", "======================================================================");
     llog_init();
     swdimmer_init();
     portal_init();
@@ -68,8 +72,9 @@ void setup() {
     pinMode(LED_WW_CTRL_PINOUT, INPUT);
     pinMode(LED_CW_CTRL_PINOUT, INPUT);
     pinMode(LED_EN_CTRL_PINOUT, OUTPUT);
+    
     delay(1000);
-        for (int i = 0; i < ICTRL_SIZE; i++) {
+    for (int i = 0; i < ICTRL_SIZE; i++) {
         iadc_val[i] = analogRead(ictrl_list[i]);
     }
 
@@ -104,16 +109,16 @@ void loop() {
     );
 
     IF_EXPRIED_RUN_SECTION(last_read_ictrl, 100,
-        handle_ictrl();
+        // handle_ictrl();
     );
 
     IF_EXPRIED_RUN_SECTION(last_blink, 10000,
         digitalWrite(LED_EN_CTRL_PINOUT, LOW);
         delay(30);
         digitalWrite(LED_EN_CTRL_PINOUT, HIGH);
-        LOG_INFO("RH = %.1f%, T= %.1f degC, Wifi %s, free heap %ld", rh, degc, 
+        LOG_INFO("RH = %.1f%, T= %.1f degC, Wifi %s, free heap %ld, %d", rh, degc, 
                   is_connected ? "Connected" : "Disconnect",
-                  xPortGetFreeHeapSize());
+                  xPortGetFreeHeapSize(), WiFi.getAutoConnect());
     );
 
     delay(100);

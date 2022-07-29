@@ -3,7 +3,7 @@
 
 
 
-## Build webpage
+## Build webpage (deprecated)
 ```
 cd webpage
 python pageconvert.py

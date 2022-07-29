@@ -19,7 +19,6 @@
 #include "uri/UriRegex.h"
 #include "AutoConnect.h"
 #include "AutoConnectCredential.h"
-#include "webpage.h"
 #include "portal.h"
 #include "swdimmer.h"
 #include "xqueue.h"
@@ -52,6 +51,13 @@ const char ROOT_PAGE[] PROGMEM =
 static WebServer server;
 static AutoConnect portal(server);
 static TaskHandle_t portal_task;
+
+extern const uint8_t index_html_start[] asm("_binary_src_webpage_index_html_start");
+extern const uint8_t index_html_end[] asm("_binary_src_webpage_index_html_end");
+extern const uint8_t script_js_start[] asm("_binary_src_webpage_script_js_start");
+extern const uint8_t script_js_end[] asm("_binary_src_webpage_script_js_end");
+extern const uint8_t logs_html_start[] asm("_binary_src_webpage_logs_html_start");
+extern const uint8_t logs_html_end[] asm("_binary_src_webpage_logs_html_end");
 /******************************************************************************/
 /*                              EXPORTED DATA                                 */
 /******************************************************************************/
@@ -78,11 +84,11 @@ void ota_error(uint8_t error) {
 }
 
 void portal_rootpage() {
-    server.send(200, "text/html", PAGE_INDEX);
+    server.send(200, "text/html", (const char *)index_html_start);
 }
 
 void portal_swdimmerpage() {
-    server.send(200, "text/plain", PAGE_SCRIPT);
+    server.send(200, "text/plain", (const char *)script_js_start);
 }
 
 void portal_swdimmer_setlevel() {
@@ -129,7 +135,7 @@ void portal_sensor_get() {
 }
 
 void logs_page() {
-    server.send(200, "text/html", PAGE_LOGS);
+    server.send(200, "text/html", (const char *)logs_html_start);
 }
 
 void get_logs() {
@@ -151,6 +157,15 @@ void get_logs() {
 }
 
 void portal_handle(void *arg) {
+    LOG_INFO("%s", "Creating portal and trying to connect...");
+    // Establish a connection with an autoReconnect option.
+    if (portal.begin()) {
+        LOG_INFO("WiFi connected: %s", WiFi.localIP().toString().c_str());
+    } 
+    else {
+        LOG_INFO("Connection failed: %s", WiFi.SSID().c_str());
+    }
+
     while (1) {
         portal.handleClient();
         vTaskDelay(pdMS_TO_TICKS(50));
@@ -163,6 +178,8 @@ void portal_init() {
     String ext_ssid =  WiFi.macAddress();
     ext_ssid.replace(":", "");
     config.autoReconnect = true;
+    config.reconnectInterval = 6;
+    config.retainPortal = true;
     config.apid = String(SOFT_AP_SSID) + String("_") + ext_ssid.substring(8);
     config.psk = "";
     config.apip.fromString(String(SOFT_AP_IP_ADDR));
@@ -181,15 +198,6 @@ void portal_init() {
     server.on("/getsensor", portal_sensor_get);
     server.on("/logs", logs_page);
     server.on("/getlogs", get_logs);
-
-    LOG_INFO("%s", "Creating portal and trying to connect...");
-    // Establish a connection with an autoReconnect option.
-    if (portal.begin()) {
-        LOG_INFO("WiFi connected: %s", WiFi.localIP().toString().c_str());
-    } 
-    else {
-        LOG_INFO("Connection failed: %s", WiFi.SSID().c_str());
-    }
 
     xTaskCreatePinnedToCore(portal_handle,                /* Task function. */
                                 "Portal",                /* name of task. */

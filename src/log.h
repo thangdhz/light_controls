@@ -17,8 +17,8 @@ extern "C" {
 #define LLOG_LEVEL_INFO                            3 /*< Basic info */
 #define LLOG_LEVEL_DBG                             4 /*< Detailled debug */
 
-#define LOG_LINE_MAX                               384
-#define __FILE_NAME__                              (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+#define LOG_LINE_MAX                               2048
+#define __FILE_NAME__                              (strrchr(__FILE__, '//') ? strrchr(__FILE__, '//') + 1 : __FILE__)
 
 #define LOG(newline, level, levelstr, format, ...) llog(newline, level, levelstr, __FILE_NAME__, __LINE__, format, __VA_ARGS__)
 

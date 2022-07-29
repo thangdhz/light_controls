@@ -5,7 +5,7 @@
 #include "swdimmer.h"
 
 #define RATIO                                      0.8f
-#define LED_PWM_FREQ                               10000
+#define LED_PWM_FREQ                               1000
 #define LED_PWM_RESOLUTION                         12
 #define LED_PWM_MAX_LEVEL                          100
 

@@ -1,2 +1,3 @@
-
-light_controls.code-workspace
+.pio
+.vscode
+lib
