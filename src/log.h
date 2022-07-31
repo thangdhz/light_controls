@@ -22,7 +22,6 @@ extern "C" {
 
 #define LOG(newline, level, levelstr, format, ...) llog(newline, level, levelstr, __FILE_NAME__, __LINE__, format, __VA_ARGS__)
 
-#define LOG_PRINT(format, ...)                     LOG(1, 0,               'P', format, __VA_ARGS__)
 #define LOG_ERR(format, ...)                       LOG(1, LLOG_LEVEL_ERR,  'E', format, __VA_ARGS__)
 #define LOG_WARN(format, ...)                      LOG(1, LLOG_LEVEL_WARN, 'W', format, __VA_ARGS__)
 #define LOG_INFO(format, ...)                      LOG(1, LLOG_LEVEL_INFO, 'I', format, __VA_ARGS__)

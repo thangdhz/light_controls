@@ -6,6 +6,7 @@
 #include "swdimmer.h"
 #include "shtc3.h"
 #include "WiFi.h"
+#include "time_sync.h"
 
 #define MAX(a,b)                                  ((a) > (b) ? (a) : (b))
 #define MIN(a,b)                                  ((a) < (b) ? (a) : (b))
@@ -58,13 +59,17 @@ void handle_ictrl() {
 
 void setup() {
     Serial.begin(115200);
-    LOG_PRINT("%s", "\r\n\r\n");
+    Serial.printf("\r\n");
     LOG_INFO("%s", "======================================================================");
     LOG_INFO("%s", "Light Controls");
     LOG_INFO("%s", "======================================================================");
     llog_init();
     swdimmer_init();
     portal_init();
+    /* Init sntp sync time */
+    timesync_init();
+    timesync_set_timezone(APP_DEFAULT_TIMEZONE);
+
     Wire.begin(SHTC3_SCL, SHTC3_SDA);
     shtc3.begin();
 
@@ -86,6 +91,12 @@ void loop() {
     unsigned long mticks = millis();
     bool is_connected = (WiFi.status() == WL_CONNECTED);
 
+    static bool fl = true;
+    if (fl) {
+        LOG_INFO("The loop run core %d", xPortGetCoreID());
+        fl = false;
+    }
+
     if (Serial.available() > 0) {
         int rchar = Serial.read();
         if (rchar != -1) {
@@ -104,12 +115,12 @@ void loop() {
         // LOG_DBG("RH = %.1f%, T= %.1f degC", rh, degc);
     }
 
-    IF_EXPRIED_RUN_SECTION(last_update_swdimmer, 1000,
+    IF_EXPRIED_RUN_SECTION(last_update_swdimmer, 100,
         swdimmer_update();
     );
 
-    IF_EXPRIED_RUN_SECTION(last_read_ictrl, 100,
-        // handle_ictrl();
+    IF_EXPRIED_RUN_SECTION(last_read_ictrl, 60,
+        handle_ictrl();
     );
 
     IF_EXPRIED_RUN_SECTION(last_blink, 10000,

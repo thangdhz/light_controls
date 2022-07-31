@@ -41,25 +41,38 @@ void swdimmer_set_level(int channel, int level) {
 
 void swdimmer_update() {
     static int swlevel[LED_MAX_CHANNEL];
+    static bool is_change[LED_MAX_CHANNEL] = { false, false };
+    bool fl_backup = false;
     int pwmlevel;
-    bool is_change = false;
 
     for (int i = 0; i < LED_MAX_CHANNEL; i++) {
-        if (swlevel[i] != swdimmer_level[i]) {
-            swlevel[i] = swdimmer_level[i];
+        if (swlevel[i] > swdimmer_level[i]) {
+            swlevel[i]--;
+            is_change[i] = true;
+        }
+        else if (swlevel[i] < swdimmer_level[i]) {
+            swlevel[i]++;
+            is_change[i] = true;
+        }
+        else if (is_change[i]) {
+            fl_backup = true;
+        }
 
+        if (is_change[i]) {
             pwmlevel = (int)(swlevel[i] * 2.55f * RATIO);
             if (pwmlevel > 255) {
                 pwmlevel = 255;
             }
 
-            ledcWrite(i, pwmlevel * 8191 / 255);
-            LOG_INFO("> OUT channel = %d, level = %d", i, swlevel[i]);
-            is_change = true;
+            ledcWrite(i, pwmlevel * 4096 / 255);
         }
     }
 
-    if (is_change) {
+    if (fl_backup) {
+        is_change[0] = false;
+        is_change[1] = false;
+        LOG_INFO("> Backup dimmer level %03d %03d [%03d %03d]", 
+                 swdimmer_level[0], swdimmer_level[1], swlevel[0], swlevel[1]);
         record_set(swdimmer_level);
     }
 }

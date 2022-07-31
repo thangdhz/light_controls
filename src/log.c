@@ -1,10 +1,11 @@
 #include "appconfig.h"
 #include "xqueue.h"
+#include "time_sync.h"
 #include "log.h"
 
 #define LOG_OUTPUT(...)                            printf(__VA_ARGS__)
 #define MAX_LOG_QUEUE_SIZE                         8
-#define LOC_SIZE                                   22
+#define LOC_SIZE                                   24
 void *llog_queue = NULL;
 
 void llog_init()
@@ -27,7 +28,7 @@ void llog(uint8_t newline, uint8_t level, char levelstr, const char *file, uint3
                 loc_str[i] = ' ';                             
             }                                                  
             loc_str[LOC_SIZE - 1] = '\0';                                              
-            index = snprintf(log_line, sizeof(log_line), "[%c] [%s] ", levelstr, loc_str);        
+            index = snprintf(log_line, sizeof(log_line), "[%c] [%s] [%s] ", levelstr, get_str_time(), loc_str);        
         }                                                                                                                        
     } 
 

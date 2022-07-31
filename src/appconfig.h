@@ -18,8 +18,8 @@ extern "C" {
 #define SOFT_AP_IP_ADDR                            "10.10.0.1"     /**< Default SoftAP ip addr */
 #define SOFT_AP_GATEWAY_IP_ADDR                    "10.10.0.1"     /**< Default SoftAP gateway ip addr */
 
-#define LED_WW_PINOUT                              0
-#define LED_CW_PINOUT                              2
+#define LED_WW_PINOUT                              16
+#define LED_CW_PINOUT                              17
 
 #define LED_WW_CTRL_PINOUT                         34
 #define LED_CW_CTRL_PINOUT                         35
@@ -27,6 +27,13 @@ extern "C" {
 
 #define SHTC3_SCL                                  23
 #define SHTC3_SDA                                  22
+
+#define SYNC_TIME_INTERVAL                         3600000
+#define APP_DEFAULT_TIMEZONE                       "<+07>-7"    /*< Asia/Ho_Chi_Minh */
+
+#define TIME_SYNC_TASK_NAME                        "Time"
+#define TIME_SYNC_TASK_SIZE                        4096
+#define TIME_SYNC_TASK_PRIORITY                    8
 
 #ifdef __cplusplus
 }

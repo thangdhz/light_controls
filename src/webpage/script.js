@@ -315,15 +315,23 @@ class timepicker {
     this.name = name;
     this.element = document.getElementById(this.name);
     this.ctx = this.element.getContext("2d");
-    this.element.width = 1000;
+    this.element.width  = 1000;
     this.element.height = 1000;
-    this.list_btn_day = {"x": 60, "y": 800, "R": 46 };
+    this.list_btn_day = {"x": 60, "y": 900, "R": 46 };
     this.enb_day = [0, 0, 0, 0, 0, 0, 0];
     this.enb_slider = false;
-    this.slider = { "x": 130, "y": 660, "w": 850, "h": 20};
-    this.sx = this.slider["x"];
-    this.sy = this.slider["y"] + 10;
-    this.swlevel = 0;
+    this.slider = { 
+      "ww": { "x": 130, "y": 610, "w": 820, "h": 20, "sx": 130, "sy": 620, "tx": 60, "ty": 636, "enb": false },
+      "cw": { "x": 130, "y": 738, "w": 820, "h": 20, "sx": 130, "sy": 748, "tx": 60, "ty": 764, "enb": false },
+    };
+    this.swlevel = {
+      "ww": 0, 
+      "cw": 0
+    };
+    this.cfbtn = {
+      "SAV"  : {"x": 590, "y": 104, "w": 300, "h": 160, "tx": 740, "ty":202 , "txt": "Save"},
+      "DEL"  : {"x": 590, "y": 310, "w": 300, "h": 160, "tx": 740, "ty":420 , "txt": "Delete"},
+    }
     this.hour = 0;
     this.min = 0;
     this.pickxy = [0, 0];
@@ -342,84 +350,157 @@ class timepicker {
 
     document.addEventListener('mousedown', e => {
       let [x, y] = getCoordinates(e);
-      let [realX, realY] = this.getRealCoordinates(this.sx, this.sy);
-      let d = distance(x, y, realX, realY);
-      if (d < 26) {
-        this.enb_slider = true;
+
+      for (const [name, sldr] of Object.entries(this.slider)) {
+        let [realX, realY] = this.getRealCoordinates(sldr["sx"], sldr["sy"]);
+        let d = distance(x, y, realX, realY);
+        if (d < 26) {
+          sldr["enb"] = true;
+        }
       }
+
       this.pickxy = [x, y];
       this.pickstart = Date.now();
     })
 
     document.addEventListener('mouseup', e => {
       let [x, y] = getCoordinates(e);
+
+      for (const [name, sldr] of Object.entries(this.slider)) {
+        sldr["enb"] = false;
+      }
+
       let [realXhh, realYhh] = this.getRealCoordinates(130, 100);
       let [realXmm, realYmm] = this.getRealCoordinates(330, 356 + 120);
-      let scaleX = this.element.getBoundingClientRect().width / this.element.width;
-      this.enb_slider = false;
-      let picktime = Math.round(800 / (Date.now() - this.pickstart));
-      if (this.pickstart[1] > realYmm || this.pickstart[1] < realYhh) {
+      let picktime = Math.round(600 / (Date.now() - this.pickstart));
+      if (this.pickxy[1] > realYmm || this.pickxy[1] < realYhh) {
         return;
       }
-      if (y < this.pickstart[1]) {
-        if (realXhh < x && x < realXhh + 180 * scaleX) {
+      if (x == this.pickxy[0] && y == this.pickxy[1]) {
+        return;
+      }
+      if (y < this.pickxy[1]) {
+        if (realXhh < x && x < realXhh + 180 * this.scaleX()) {
           this.hour += picktime;
         }
-        else if (realXmm < x && x < realXmm + 180 * scaleX) {
+        else if (realXmm < x && x < realXmm + 180 * this.scaleX()) {
           this.min += picktime;
         }
       }
       else {
-        if (realXhh < x && x < realXhh + 180 * scaleX) {
+        if (realXhh < x && x < realXhh + 180 * this.scaleX()) {
           this.hour -= picktime;
         }
-        else if (realXmm < x && x < realXmm + 180 * scaleX) {
+        else if (realXmm < x && x < realXmm + 180 * this.scaleX()) {
           this.min -= picktime;
         }
       } 
-      if (this.hour > 23) { this.hour = 0; }
-      if (this.hour < 0) { this.hour = 23; }
-      if (this.min > 59) { this.min = 0; }
-      if (this.min < 0 ) { this.min = 59; }
+      if (this.hour > 23) { this.hour = 0;  }
+      if (this.hour < 0 ) { this.hour = 23; }
+      if (this.min  > 59) { this.min  = 0;  }
+      if (this.min  < 0 ) { this.min  = 59; }
     })
 
     document.addEventListener('mousemove', e => {
       let [x, y] = getCoordinates(e);
-      let [realX, realY] = this.getRealCoordinates(this.slider["x"], this.slider["y"]);
-      let scaleX = this.element.getBoundingClientRect().width / this.element.width;
-      if (this.enb_slider) {
+
+      for (const [name, sldr] of Object.entries(this.slider)) {
+        let [realX, realY] = this.getRealCoordinates(sldr["x"], sldr["y"]);
+        
+        if (!sldr["enb"]) {
+          continue;
+        }
+
         if (realY - 26 < y && y < realY + 26) {
-          if (this.slider["x"] < x  && x < this.slider["x"] + this.slider["w"]) {
-            this.sx = x;
-            this.swlevel = Math.round((this.sx - this.slider["x"])/ this.slider["w"] * 100);
+          if (realX < x  && x < realX + sldr["w"] * this.scaleX()) {
+            sldr["sx"] = sldr["x"] + (x - realX) / this.scaleX();
+            this.swlevel[name] = Math.round((x - realX)/ (sldr["w"] * this.scaleX()) * 100);
           }
         }
       }
     })
     
     document.addEventListener('touchstart', e => {
+      // e.preventDefault();
       let [x, y] = getCoordinates(e);
-      let [realX, realY] = this.getRealCoordinates(this.sx, this.sy);
-      let d = distance(x, y, realX, realY);
-      if (d < 32) {
-        this.enb_slider = true;
+
+      for (const [name, sldr] of Object.entries(this.slider)) {
+        let [realX, realY] = this.getRealCoordinates(sldr["sx"], sldr["sy"]);
+        let d = distance(x, y, realX, realY);
+        if (d < 26) {
+          sldr["enb"] = true;
+        }
       }
-    })
+
+      this.pickxy = [x, y];
+      this.pickstart = Date.now();
+    }, {passive: false})
     
     document.addEventListener('touchend', e => {
-      this.enb_slider = false;
-    })
+      // e.preventDefault();
+
+      for (const [name, sldr] of Object.entries(this.slider)) {
+        sldr["enb"] = false;
+      }
+
+      let [x, y] = getCoordinates(e);
+      let [realXhh, realYhh] = this.getRealCoordinates(130, 100);
+      let [realXmm, realYmm] = this.getRealCoordinates(330, 356 + 120);
+      let picktime = Math.round(500 / (Date.now() - this.pickstart));
+      if (this.pickxy[1] > realYmm || this.pickxy[1] < realYhh) {
+        return;
+      }
+      if (x == this.pickxy[0] && y == this.pickxy[1]) {
+        return;
+      }
+      if (y < this.pickxy[1]) {
+        if (realXhh < x && x < realXhh + 180 * this.scaleX()) {
+          this.hour += picktime;
+        }
+        else if (realXmm < x && x < realXmm + 180 * this.scaleX()) {
+          this.min += picktime;
+        }
+      }
+      else {
+        if (realXhh < x && x < realXhh + 180 * this.scaleX()) {
+          this.hour -= picktime;
+        }
+        else if (realXmm < x && x < realXmm + 180 * this.scaleX()) {
+          this.min -= picktime;
+        }
+      } 
+      if (this.hour > 23) { this.hour = 0;  }
+      if (this.hour < 0 ) { this.hour = 23; }
+      if (this.min  > 59) { this.min  = 0;  }
+      if (this.min  < 0 ) { this.min  = 59; }
+    }, {passive: false})
     
     document.addEventListener('touchmove', e => {
+      // e.preventDefault();
       let [x, y] = getCoordinates(e);
-      e.preventDefault();
-    })
+      
+      for (const [name, sldr] of Object.entries(this.slider)) {
+        let [realX, realY] = this.getRealCoordinates(sldr["x"], sldr["y"]);
+        
+        if (!sldr["enb"]) {
+          continue;
+        }
+
+        if (realY - 26 < y && y < realY + 26) {
+          if (realX < x  && x < realX + sldr["w"] * this.scaleX()) {
+            sldr["sx"] = sldr["x"] + (x - realX) / this.scaleX();
+            this.swlevel[name] = Math.round((x - realX)/ (sldr["w"] * this.scaleX()) * 100);
+          }
+        }
+      }
+    }, {passive: false})
     
     document.addEventListener('click', e => {
       let [x, y] = getCoordinates(e);
+      // handle button day
       let bx = this.list_btn_day["x"];
       let by = this.list_btn_day["y"];
-      let br = this.list_btn_day["R"];
+      let br = this.list_btn_day["R"] * this.scaleXY();
       for (let i = 0; i < 7; i++) {
         let [realX, realY] = this.getRealCoordinates(bx, by);
         let d = distance(x, y, realX, realY);
@@ -428,8 +509,17 @@ class timepicker {
         }
         bx += 148;
       }
-    })
-  };
+      // handle button config
+      for (const [name, btn] of Object.entries(this.cfbtn)) {
+        let [realX, realY] = this.getRealCoordinates(btn["x"], btn["y"]);
+        if (realX < x && x < realX + btn["w"] * this.scaleX()) {
+          if (realY < y && y < realY + btn["h"] * this.scaleY()) {
+            this.onButtonClick(name);
+          }
+        }
+      }
+    }, {passive: false})
+  }
 
   updateLevel(level) {
     console.log(`>> Channel ${this.channel} update level ${level}`);
@@ -448,29 +538,64 @@ class timepicker {
     return [realX, realY]
   }
 
+  scaleX() {
+    return this.element.getBoundingClientRect().width / this.element.width;
+  }
+
+  scaleY() {
+    return this.element.getBoundingClientRect().height / this.element.height;
+  }
+
+  scaleXY() {
+    let scaleX = this.element.getBoundingClientRect().width / this.element.width;
+    let scaleY = this.element.getBoundingClientRect().height / this.element.height;
+
+    // return (Math.sqrt((scaleX * scaleX) + (scaleY * scaleY)));
+    return scaleX;
+  }
+
+  offsetX() {
+    return this.element.offsetLeft;
+  }
+
+  offsetY() {
+    return this.element.offsetTop;
+  }
+
+  onButtonClick(name) {
+    if (name == "DEL") {
+
+    }
+    else if (name == "SAV") {
+
+    }
+  }
+
   tmRender() {
     this.ctx.clearRect(0, 0, this.element.width, this.element.height);
     this.ctx.fillStyle = '#444444';
 
-    this.ctx.beginPath();
-    this.ctx.fillStyle = this.gradientBackgroundSlider;
-    this.ctx.fillRect(this.slider["x"], this.slider["y"], this.slider["w"], this.slider["h"]);
-    this.ctx.fill();
+    for (const [name, sldr] of Object.entries(this.slider)) {
+      this.ctx.beginPath();
+      this.ctx.fillStyle = this.gradientBackgroundSlider;
+      this.ctx.fillRect(sldr["x"], sldr["y"], sldr["w"], sldr["h"]);
+      this.ctx.fill();
 
-    this.ctx.beginPath();
-    this.ctx.fillStyle = this.gradientSlider;
-    this.ctx.fillRect(this.slider["x"], this.slider["y"], this.sx - this.slider["x"], this.slider["h"]);
-    this.ctx.fill();
+      this.ctx.beginPath();
+      this.ctx.fillStyle = this.gradientSlider;
+      this.ctx.fillRect(sldr["x"], sldr["y"], sldr["sx"] - sldr["x"], sldr["h"]);
+      this.ctx.fill();
 
-    this.ctx.beginPath();
-    this.ctx.arc(this.sx, this.sy, 26, 0, 2 * Math.PI);
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.fill();
+      this.ctx.beginPath();
+      this.ctx.arc(sldr["sx"], sldr["sy"], 26, 0, 2 * Math.PI);
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fill();
 
-    this.ctx.font = "33px Arial";
-    this.ctx.fillStyle = "#ffffff";
-    this.ctx.textAlign = "center";
-    this.ctx.fillText(`${this.swlevel}%`, 60, 680);
+      this.ctx.font = "33px Arial";
+      this.ctx.fillStyle = "#ffffff";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText(`${this.swlevel[name]}%`, sldr["tx"], sldr["ty"]);
+    }
 
     this.ctx.save();
     this.ctx.beginPath();
@@ -516,18 +641,17 @@ class timepicker {
 
     this.ctx.beginPath();
     this.ctx.fillStyle = "#afa27b";
-    this.ctx.fillRect(590 - 4, 104 - 4, 300 + 8, 160 + 8);
-    this.ctx.fillRect(590 - 4, 310 - 4, 300 + 8, 160 + 8);
+    this.ctx.fillRect(this.cfbtn["DEL"]["x"] - 4, this.cfbtn["DEL"]["y"] - 4, this.cfbtn["DEL"]["w"] + 8, this.cfbtn["DEL"]["h"] + 8);
+    this.ctx.fillRect(this.cfbtn["SAV"]["x"] - 4, this.cfbtn["SAV"]["y"] - 4, this.cfbtn["SAV"]["w"] + 8, this.cfbtn["SAV"]["h"] + 8);
     this.ctx.fillStyle = "#3E3D31";
-    this.ctx.fillRect(590, 104, 300, 160);
-    this.ctx.fillRect(590, 310, 300, 160);
+    this.ctx.fillRect(this.cfbtn["DEL"]["x"], this.cfbtn["DEL"]["y"], this.cfbtn["DEL"]["w"], this.cfbtn["DEL"]["h"]);
+    this.ctx.fillRect(this.cfbtn["SAV"]["x"], this.cfbtn["SAV"]["y"], this.cfbtn["SAV"]["w"], this.cfbtn["SAV"]["h"]);
     this.ctx.fill();
     this.ctx.font = "68px Roboto";
     this.ctx.textAlign = "center";
     this.ctx.fillStyle = "#9c9b97";
-    this.ctx.fillText("Save", 740, 202);
-    this.ctx.fillText("Delete", 740, 420);
-
+    this.ctx.fillText(this.cfbtn["DEL"]["txt"], this.cfbtn["DEL"]["tx"], this.cfbtn["DEL"]["ty"]);
+    this.ctx.fillText(this.cfbtn["SAV"]["txt"], this.cfbtn["SAV"]["tx"], this.cfbtn["SAV"]["ty"]);
 
     let bx = this.list_btn_day["x"];
     let by = this.list_btn_day["y"];
